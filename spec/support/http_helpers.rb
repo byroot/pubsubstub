@@ -41,7 +41,7 @@ module HTTPHelpers
   LOG_PATH = File.join(ROOT_PATH, 'tmp/puma.log')
   def with_background_server
     Dir.mkdir(LOG_DIR) unless Dir.exist?(LOG_DIR)
-    server_pid = Process.spawn('bin/server', chdir: ROOT_PATH, out: LOG_PATH, err: LOG_PATH)
+    server_pid = Process.spawn('bin/server', chdir: ROOT_PATH)#, out: LOG_PATH, err: LOG_PATH)
     begin
       yield
     ensure
