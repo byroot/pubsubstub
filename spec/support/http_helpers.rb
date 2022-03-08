@@ -18,7 +18,9 @@ module HTTPHelpers
             end
           end
         end
-      rescue Errno::ECONNRESET, Errno::EPIPE, Errno::EINVAL, Errno::ECONNREFUSED
+      rescue Errno::ECONNRESET, Errno::EPIPE, Errno::EINVAL, Errno::ECONNREFUSED => e
+        puts
+        p e
         if retries > 0
           retries -= 1
           sleep 0.5
@@ -37,7 +39,7 @@ module HTTPHelpers
   LOG_PATH = File.join(ROOT_PATH, 'tmp/puma.log')
   def with_background_server
     Dir.mkdir(LOG_DIR) unless Dir.exist?(LOG_DIR)
-    server_pid = Process.spawn('bin/server', chdir: ROOT_PATH, out: LOG_PATH, err: LOG_PATH)
+    server_pid = Process.spawn('bin/server', chdir: ROOT_PATH), out: LOG_PATH, err: LOG_PATH)
     begin
       yield
     ensure
