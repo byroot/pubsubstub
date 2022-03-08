@@ -9,7 +9,6 @@
 
 force_shutdown_after 0
 
-
 # min, max thread. The max define how much conccurent clients you can handle.
 # If all threads are occupied the client will be stuck. Make sure to configure this appropriately.
 # If you run Pubsubstub as a standalone, the cost of each thread is really low, so you can easilly have this quite high.

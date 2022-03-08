@@ -12,24 +12,20 @@ module HTTPHelpers
             request.add_field(name, value)
           end
 
-          begin
-            http.request request do |response|
-              response.read_body do |chunk|
-                queue.push(chunk) unless chunk.empty?
-              end
-            end
-          rescue Errno::EINVAL, Errno::ECONNREFUSED # Happen once in a while when the server is not 100% ready
-            if retries > 0
-              retries -= 1
-              sleep 0.5
-              retry
-            else
-              raise
+          http.request request do |response|
+            response.read_body do |chunk|
+              queue.push(chunk) unless chunk.empty?
             end
           end
         end
-      rescue Errno::ECONNRESET, Errno::EPIPE
-        # The server closed the connection
+      rescue Errno::ECONNRESET, Errno::EPIPE, Errno::EINVAL, Errno::ECONNREFUSED
+        if retries > 0
+          retries -= 1
+          sleep 0.5
+          retry
+        else
+          raise
+        end
       end
     end
 
@@ -41,7 +37,7 @@ module HTTPHelpers
   LOG_PATH = File.join(ROOT_PATH, 'tmp/puma.log')
   def with_background_server
     Dir.mkdir(LOG_DIR) unless Dir.exist?(LOG_DIR)
-    server_pid = Process.spawn('bin/server', chdir: ROOT_PATH)#, out: LOG_PATH, err: LOG_PATH)
+    server_pid = Process.spawn('bin/server', chdir: ROOT_PATH, out: LOG_PATH, err: LOG_PATH)
     begin
       yield
     ensure
