@@ -36,6 +36,7 @@ RSpec::Matchers.define :listen do
     start = Time.now.to_f
     begin
       connection = TCPSocket.new('localhost', port)
+      sleep 0.5 if ENV['CI'] # give it a bit more time on CI
       true
     rescue
       if (Time.now.to_f - start) < @wait_time
