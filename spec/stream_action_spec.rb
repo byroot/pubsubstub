@@ -21,14 +21,6 @@ end
 describe Pubsubstub::StreamAction do
   let(:app) { Pubsubstub::StreamAction.new }
 
-  context "with EventMachine" do
-    before do
-      allow(EventMachine).to receive(:reactor_running?).and_return(true)
-    end
-
-    it_behaves_like "short lived connections"
-  end
-
   context "with persistent connections disabled" do
     around :example do |example|
       previous = Pubsubstub.use_persistent_connections
@@ -44,7 +36,7 @@ describe Pubsubstub::StreamAction do
     with_background_server do
       expect(9292).to listen.in_under(5)
 
-      chunks = async_get('http://localhost:9292/?channels[]=foo', { 'Last-Event-Id' => '0' })
+      chunks, thread = async_get('http://localhost:9292/?channels[]=foo', { 'Last-Event-Id' => '0' })
       expect(chunks.pop).to include("event: heartbeat\n")
 
       Pubsubstub.publish('foo', 'bar', id: 1)
@@ -52,6 +44,8 @@ describe Pubsubstub::StreamAction do
 
       Pubsubstub.publish('foo', 'baz', id: 2)
       expect(chunks.pop).to include("id: 2\n")
+    ensure
+      thread.kill
     end
   end
 
@@ -61,11 +55,13 @@ describe Pubsubstub::StreamAction do
     with_background_server do
       expect(9292).to listen.in_under(5)
 
-      chunks = async_get('http://localhost:9292/?channels[]=foo', { 'Last-Event-Id' => '0' })
+      chunks, thread = async_get('http://localhost:9292/?channels[]=foo', { 'Last-Event-Id' => '0' })
       expect(chunks.pop).to include("id: 1\n")
 
       Pubsubstub.publish('foo', 'baz', id: 2)
       expect(chunks.pop).to include("id: 2\n")
+    ensure
+      thread.kill
     end
   end
 end

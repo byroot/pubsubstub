@@ -41,11 +41,7 @@ module Pubsubstub
     end
 
     def use_persistent_connections?
-      Pubsubstub.use_persistent_connections && !event_machine?
-    end
-
-    def event_machine?
-      defined?(EventMachine) && EventMachine.reactor_running?
+      Pubsubstub.use_persistent_connections
     end
 
     def subscribe_connection(channels, last_event_id)
@@ -74,12 +70,8 @@ module Pubsubstub
       @mutex.synchronize do
         return if defined? @helper_threads_initialized
         @helper_threads_initialized = true
-        if event_machine?
-          error { "EventMachine is loaded, running in degraded mode :/"}
-        else
-          start_subscriber
-          start_heartbeat
-        end
+        start_subscriber
+        start_heartbeat
       end
     end
 

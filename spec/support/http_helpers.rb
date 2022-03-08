@@ -4,7 +4,7 @@ module HTTPHelpers
   def async_get(uri, headers = {}, retries: 10, &block)
     uri = URI(uri.to_s)
     queue = Queue.new
-    Thread.start do
+    thread = Thread.start do
       begin
         Net::HTTP.start(uri.host, uri.port, open_timeout: 10) do |http|
           request = Net::HTTP::Get.new uri.request_uri
@@ -33,7 +33,7 @@ module HTTPHelpers
       end
     end
 
-    queue
+    return queue, thread
   end
 
   ROOT_PATH = File.join(__dir__, '../..')
