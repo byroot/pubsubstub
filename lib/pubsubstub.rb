@@ -43,7 +43,7 @@ module Pubsubstub
     end
 
     def new_redis
-      Redis.new(url: redis_url)
+      Redis.new(url: redis_url, ssl_params: redis_ssl_params)
     end
 
     def subscriber
@@ -64,6 +64,16 @@ module Pubsubstub
     rescue => error
       handle_error(error)
       raise
+    end
+
+    def redis_ssl_params
+      if(ENV['REDIS_SSL_VERIFY'] == 'false')
+        {
+          verify_mode: OpenSSL::SSL::VERIFY_NONE
+        }
+      else
+        {}
+      end
     end
   end
 
