@@ -1,5 +1,4 @@
 require "logger"
-require "mutex_m"
 require "json"
 require "set"
 
@@ -17,7 +16,7 @@ require "pubsubstub/publish_action"
 require "pubsubstub/application"
 
 module Pubsubstub
-  extend Mutex_m
+  @mutex = Mutex.new
 
   class << self
     attr_accessor :heartbeat_frequency, :redis_url, :channels_scrollback_size,
@@ -35,11 +34,11 @@ module Pubsubstub
     end
 
     def redis
-      @redis || synchronize { @redis ||= new_redis }
+      @redis || @mutex.synchronize { @redis ||= new_redis }
     end
 
     def redis=(client)
-      synchronize { @redis = client }
+      @mutex.synchronize { @redis = client }
     end
 
     def new_redis
@@ -47,7 +46,7 @@ module Pubsubstub
     end
 
     def subscriber
-      @subscriber || synchronize { @subscriber ||= Subscriber.new }
+      @subscriber || @mutex.synchronize { @subscriber ||= Subscriber.new }
     end
 
     def heartbeat_event

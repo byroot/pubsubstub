@@ -1,10 +1,10 @@
 module Pubsubstub
   class Subscriber
     include Logging
-    include Mutex_m
 
     def initialize
       super
+      @mutex = Mutex.new
       @subscribed = false
       @listeners = {}
     end
@@ -14,14 +14,14 @@ module Pubsubstub
     end
 
     def add_event_listener(channel_key, callback)
-      synchronize do
+      @mutex.synchronize do
         @listeners[channel_key] ||= Set.new
         !!@listeners[channel_key].add?(callback)
       end
     end
 
     def remove_event_listener(channel_key, callback)
-      synchronize do
+      @mutex.synchronize do
         return unless @listeners[channel_key]
         !!@listeners[channel_key].delete?(callback)
       end
@@ -30,7 +30,7 @@ module Pubsubstub
     def stop
       # redis.client.call allow to bypass the client mutex
       # Since we now that the only other possible caller is blocking on reading the socket this is safe
-      synchronize do
+      @mutex.synchronize do
         redis._client.call(['punsubscribe', pubsub_pattern])
       end
     end
